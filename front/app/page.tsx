@@ -10,12 +10,18 @@ import { AnalyticsView } from '@/components/dashboard/analytics-view'
 import { SettingsView } from '@/components/dashboard/settings-view'
 import { AlertDetailPanel } from '@/components/dashboard/alert-detail-panel'
 import { AlertFeed } from '@/components/dashboard/alert-feed'
+import { LandingPage } from '@/components/dashboard/landing-page'
 import type { Alert } from '@/lib/mock-data'
 
 export default function DashboardPage() {
+  const [showLanding, setShowLanding] = useState(true)
   const [activeView, setActiveView] = useState('overview')
   const [selectedAlert, setSelectedAlert] = useState<Alert | null>(null)
   const [isDetailPanelOpen, setIsDetailPanelOpen] = useState(false)
+
+  const handleEnterDashboard = () => {
+    setShowLanding(false)
+  }
 
   const handleViewAlertDetails = (alert: Alert) => {
     setSelectedAlert(alert)
@@ -58,6 +64,10 @@ export default function DashboardPage() {
       default:
         return <OverviewView onViewAlertDetails={handleViewAlertDetails} />
     }
+  }
+
+  if (showLanding) {
+    return <LandingPage onEnter={handleEnterDashboard} />
   }
 
   return (

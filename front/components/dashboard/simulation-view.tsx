@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { cn } from '@/lib/utils'
 import { simulationScenarios } from '@/lib/mock-data'
+import { ScrollArea } from '@/components/ui/scroll-area'
 
 type SimulationState = 'idle' | 'running' | 'complete'
 
@@ -136,59 +137,70 @@ export function SimulationView() {
           </div>
 
           {/* Split view: Terminal + Results */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-6">
             {/* Terminal Log */}
-            <div className="bg-[#0F172A] rounded-xl p-4 h-80 overflow-hidden">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-3 h-3 rounded-full bg-red-500" />
-                <div className="w-3 h-3 rounded-full bg-yellow-500" />
-                <div className="w-3 h-3 rounded-full bg-green-500" />
-                <span className="text-xs text-gray-500 ml-2">simulation.log</span>
+            <div className="bg-[#020617] rounded-xl p-0 h-[400px] border border-white/10 overflow-hidden shadow-2xl relative">
+              <div className="bg-slate-900 px-4 py-2 border-b border-white/10 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 rounded-full bg-rose-500/80" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-amber-500/80" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/80" />
+                  <span className="text-[10px] text-slate-400 font-mono ml-2 uppercase tracking-widest">threat-simulation.log</span>
+                </div>
+                <div className="text-[10px] text-slate-500 font-mono">SSH v2.0</div>
               </div>
-              <div className="h-[calc(100%-2rem)] overflow-y-auto font-mono text-xs">
+              <ScrollArea className="h-[360px] p-4 font-mono text-[11px] leading-relaxed">
                 {simulation.logs.map((log, i) => (
                   <div 
                     key={i} 
                     className={cn(
-                      'py-0.5 animate-in fade-in slide-in-from-bottom-1 duration-200',
-                      log.includes('[ENGINE]') ? 'text-amber-400' :
-                      log.includes('[COMPLETE]') ? 'text-green-400' :
-                      log.includes('[SEED]') ? 'text-blue-400' :
-                      'text-green-500'
+                      'py-0.5 animate-in fade-in slide-in-from-left-2 duration-300',
+                      log.includes('[ENGINE]') ? 'text-blue-400 font-bold' :
+                      log.includes('[COMPLETE]') ? 'text-emerald-400 font-bold' :
+                      log.includes('[SEED]') ? 'text-indigo-400' :
+                      log.includes('[APP]') ? 'text-purple-400' :
+                      log.includes('[NET]') ? 'text-sky-400' :
+                      'text-slate-300'
                     )}
                   >
+                    <span className="opacity-40 mr-2">[{i.toString().padStart(3, '0')}]</span>
                     {log}
                   </div>
                 ))}
                 <div ref={logEndRef} />
                 {simulation.state === 'running' && (
-                  <span className="text-green-500 animate-pulse">▌</span>
+                  <span className="inline-block w-2 h-4 bg-emerald-500 ml-1 animate-pulse align-middle" />
                 )}
-              </div>
+              </ScrollArea>
             </div>
 
             {/* Detection Results */}
             <div className="space-y-4">
-              <div className="bg-card rounded-xl border border-border p-4">
-                <h3 className="text-sm font-medium text-foreground mb-4">Detection Progress</h3>
-                <div className="space-y-3">
+              <div className="bg-card/40 backdrop-blur-sm rounded-xl border border-white/10 p-5 cyber-grid">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">Detection Pipeline</h3>
+                  <div className="px-2 py-0.5 rounded bg-primary/10 border border-primary/20 text-[10px] text-primary font-mono">
+                    AI AGENT ACTIVE
+                  </div>
+                </div>
+                <div className="space-y-5">
                   <DetectionIndicator
-                    label="Brute Force Attack"
+                    label="Credential Stuffing (App Layer)"
                     detected={simulation.progress > 30}
                     detecting={simulation.state === 'running' && simulation.progress > 20 && simulation.progress <= 30}
                   />
                   <DetectionIndicator
-                    label="Port Scanning"
+                    label="Internal Reconnaissance (Net Layer)"
                     detected={simulation.progress > 50}
                     detecting={simulation.state === 'running' && simulation.progress > 40 && simulation.progress <= 50}
                   />
                   <DetectionIndicator
-                    label="Lateral Movement"
+                    label="Lateral Movement (Endpoint Layer)"
                     detected={simulation.progress > 70}
                     detecting={simulation.state === 'running' && simulation.progress > 60 && simulation.progress <= 70}
                   />
                   <DetectionIndicator
-                    label="Cross-Layer Correlation"
+                    label="Cross-Layer correlation logic"
                     detected={simulation.progress > 90}
                     detecting={simulation.state === 'running' && simulation.progress > 80 && simulation.progress <= 90}
                   />
@@ -196,32 +208,39 @@ export function SimulationView() {
               </div>
 
               {simulation.state === 'complete' && (
-                <div className="bg-card rounded-xl border border-border p-4 animate-in slide-in-from-bottom-2 fade-in duration-300">
-                  <h3 className="text-sm font-medium text-foreground mb-3 flex items-center gap-2">
-                    <Check className="w-4 h-4 text-green-600" />
-                    Simulation Complete
-                  </h3>
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="text-center p-3 bg-accent rounded-lg">
-                      <p className="text-2xl font-bold text-foreground">{simulation.results.threatsDetected}</p>
-                      <p className="text-xs text-muted-foreground">Threats Detected</p>
+                <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-5 animate-in zoom-in-95 fade-in duration-500">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                      <Check className="w-6 h-6 text-emerald-500" />
                     </div>
-                    <div className="text-center p-3 bg-accent rounded-lg">
-                      <p className="text-2xl font-bold text-foreground">{simulation.results.falsePositives}</p>
-                      <p className="text-xs text-muted-foreground">False Positives</p>
-                    </div>
-                    <div className="text-center p-3 bg-accent rounded-lg">
-                      <p className="text-2xl font-bold text-foreground">{simulation.results.avgLatency}s</p>
-                      <p className="text-xs text-muted-foreground">Avg Latency</p>
+                    <div>
+                      <h3 className="text-sm font-bold text-foreground">Analysis Complete</h3>
+                      <p className="text-xs text-muted-foreground">Simulation report generated successfully</p>
                     </div>
                   </div>
+                  
+                  <div className="grid grid-cols-3 gap-3 mb-5">
+                    <div className="p-3 bg-white/5 rounded-lg border border-white/5 text-center">
+                      <p className="text-xl font-black text-emerald-500">{simulation.results.threatsDetected}</p>
+                      <p className="text-[10px] uppercase font-bold text-muted-foreground">Detected</p>
+                    </div>
+                    <div className="p-3 bg-white/5 rounded-lg border border-white/5 text-center">
+                      <p className="text-xl font-black text-rose-500">{simulation.results.falsePositives}</p>
+                      <p className="text-[10px] uppercase font-bold text-muted-foreground">False +</p>
+                    </div>
+                    <div className="p-3 bg-white/5 rounded-lg border border-white/5 text-center">
+                      <p className="text-xl font-black text-blue-500">{simulation.results.avgLatency}s</p>
+                      <p className="text-[10px] uppercase font-bold text-muted-foreground">Latency</p>
+                    </div>
+                  </div>
+
                   <Button 
-                    variant="outline" 
+                    variant="secondary" 
                     size="sm" 
-                    className="w-full mt-4"
+                    className="w-full font-bold uppercase tracking-widest text-[11px]"
                     onClick={resetSimulation}
                   >
-                    Run Another Simulation
+                    Deploy New Scenario
                   </Button>
                 </div>
               )}

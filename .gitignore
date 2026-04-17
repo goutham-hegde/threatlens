@@ -1,0 +1,32 @@
+# --- Python / FastAPI ---
+__pycache__/
+*.py[cod]
+*$py.class
+.env
+.venv
+env/
+venv/
+PYTHONHASHSEED
+
+# --- Machine Learning Artifacts (The culprits from your error) ---
+# Ignore all serialized models/data in the model folder
+model/*.pkl
+model/*.joblib
+model/*.h5
+model/*.pth
+
+# --- Node.js / React (If applicable to your frontend) ---
+node_modules/
+dist/
+build/
+.eslintcache
+
+# --- OS / IDE Specific ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# --- Logs & Databases ---
+*.log
+*.sqlite
