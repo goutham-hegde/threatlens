@@ -1,6 +1,6 @@
 'use client'
 
-import { X } from 'lucide-react'
+import { X, Shield, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Alert, Severity } from '@/lib/mock-data'
 import { shapFeatures } from '@/lib/mock-data'
@@ -70,41 +70,47 @@ export function AlertDetailPanel({ alert, isOpen, onClose }: AlertDetailPanelPro
             </div>
 
             {/* Plain-English Explanation */}
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium text-foreground">Why was this flagged?</h3>
-              <div className="bg-accent/50 rounded-lg p-4">
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  IP {alert.ip} triggered {alert.severity === 'critical' ? '312' : 'multiple'} failed authentication attempts 
-                  against /api/login within 58 seconds — 52× above the baseline for this endpoint. The same IP then 
-                  appeared in network logs making SMB connections to 7 hosts it had zero prior history with.
-                </p>
-                <p className="text-sm text-muted-foreground leading-relaxed mt-3">
-                  The combination of failed auth → internal scanning is a textbook post-compromise lateral movement 
-                  pattern (MITRE {alert.mitreTags.join(' → ')}).
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="p-1 bg-primary/10 rounded">
+                  <span className="text-primary text-xs">AI</span>
+                </span>
+                <h3 className="text-sm font-semibold text-foreground tracking-tight">System Narrative</h3>
+              </div>
+              <div className="bg-primary/5 border border-primary/10 rounded-xl p-4 relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-2 opacity-10">
+                  <Shield className="w-12 h-12" />
+                </div>
+                <p className="text-sm text-foreground/90 leading-relaxed relative z-10 font-medium italic">
+                  "IP {alert.ip} triggered {alert.severity === 'critical' ? '312' : 'multiple'} failed authentication attempts 
+                  against /api/login within 58 seconds. This was followed by SMB lateral movement attempts. 
+                  Confidence is high due to the sequence of events matching known TTPs."
                 </p>
               </div>
             </div>
 
             {/* SHAP Feature Importance */}
-            <div className="space-y-3">
-              <h3 className="text-sm font-medium text-foreground">What drove this decision</h3>
-              <div className="space-y-2">
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                Explainability — <span className="text-xs font-normal text-muted-foreground">SHAP Values</span>
+              </h3>
+              <div className="space-y-3 p-4 bg-accent/20 rounded-xl border border-white/5">
                 {shapFeatures.map((feature) => (
-                  <div key={feature.feature} className="space-y-1">
-                    <div className="flex justify-between text-xs">
-                      <span className="text-muted-foreground">{feature.label}</span>
+                  <div key={feature.feature} className="space-y-1.5">
+                    <div className="flex justify-between text-[11px]">
+                      <span className="text-muted-foreground font-medium">{feature.label}</span>
                       <span className={cn(
-                        'font-mono',
-                        feature.value > 0 ? 'text-primary' : 'text-muted-foreground'
+                        'font-mono font-bold px-1.5 py-0.5 rounded',
+                        feature.value > 0 ? 'text-primary bg-primary/10' : 'text-muted-foreground bg-white/5'
                       )}>
                         {feature.value > 0 ? '+' : ''}{feature.value.toFixed(2)}
                       </span>
                     </div>
-                    <div className="h-2 bg-muted rounded-full overflow-hidden">
+                    <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
                       <div 
                         className={cn(
-                          'h-full rounded-full transition-all duration-500',
-                          feature.value > 0 ? 'bg-primary' : 'bg-muted-foreground/30'
+                          'h-full rounded-full transition-all duration-1000 shadow-[0_0_8px_rgba(0,0,0,0.3)]',
+                          feature.value > 0 ? 'bg-gradient-to-r from-blue-600 to-primary' : 'bg-slate-600'
                         )}
                         style={{ width: `${Math.abs(feature.value) * 100}%` }}
                       />
@@ -116,66 +122,40 @@ export function AlertDetailPanel({ alert, isOpen, onClose }: AlertDetailPanelPro
 
             {/* Playbook */}
             <div className="space-y-3">
-              <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
-                <span>📋</span> Recommended Response — {alert.title}
+              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <span>⚡</span> Playbook — Actionable Intelligence
               </h3>
               
-              <Accordion type="multiple" defaultValue={['immediate', 'short-term', 'escalate']} className="space-y-2">
-                <AccordionItem value="immediate" className="border rounded-lg px-3">
-                  <AccordionTrigger className="text-sm font-medium py-3">
-                    Immediate (0–15 min)
+              <Accordion type="multiple" defaultValue={['immediate']} className="space-y-3">
+                <AccordionItem value="immediate" className="border border-white/10 rounded-xl px-4 bg-card/50">
+                  <AccordionTrigger className="text-sm font-bold py-4 hover:no-underline">
+                    Phase 1: Containment
                   </AccordionTrigger>
-                  <AccordionContent className="pb-3">
-                    <ul className="space-y-2 text-sm text-muted-foreground">
-                      <li className="flex items-start gap-2">
-                        <span className="text-muted-foreground">├─</span>
-                        Block IP {alert.ip} at perimeter firewall
+                  <AccordionContent className="pb-4">
+                    <ul className="space-y-3 text-sm">
+                      <li className="flex items-start gap-3">
+                        <div className="mt-1 w-4 h-4 rounded border border-primary/50 flex items-center justify-center shrink-0">
+                          <Check className="w-2.5 h-2.5 text-primary opacity-0 group-hover:opacity-100" />
+                        </div>
+                        <span className="text-foreground/80">Block IP <code className="bg-white/5 px-1 rounded">{alert.ip}</code> at perimeter</span>
                       </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-muted-foreground">├─</span>
-                        Force password reset for all accounts that received requests
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-muted-foreground">└─</span>
-                        Isolate affected host from internal network
+                      <li className="flex items-start gap-3">
+                        <div className="mt-1 w-4 h-4 rounded border border-primary/50 flex items-center justify-center shrink-0" />
+                        <span className="text-foreground/80">Quarantine affected assets</span>
                       </li>
                     </ul>
                   </AccordionContent>
                 </AccordionItem>
 
-                <AccordionItem value="short-term" className="border rounded-lg px-3">
-                  <AccordionTrigger className="text-sm font-medium py-3">
-                    Short-term (15–60 min)
+                <AccordionItem value="short-term" className="border border-white/10 rounded-xl px-4 bg-card/50">
+                  <AccordionTrigger className="text-sm font-bold py-4 hover:no-underline">
+                    Phase 2: Investigation
                   </AccordionTrigger>
-                  <AccordionContent className="pb-3">
-                    <ul className="space-y-2 text-sm text-muted-foreground">
-                      <li className="flex items-start gap-2">
-                        <span className="text-muted-foreground">├─</span>
-                        Pull full auth logs for the past 24h on /api/login
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-muted-foreground">├─</span>
-                        Check for any successful logins from this IP before block
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-muted-foreground">└─</span>
-                        Review SMB access logs on the contacted hosts
-                      </li>
-                    </ul>
-                  </AccordionContent>
-                </AccordionItem>
-
-                <AccordionItem value="escalate" className="border rounded-lg px-3">
-                  <AccordionTrigger className="text-sm font-medium py-3">
-                    Escalate if...
-                  </AccordionTrigger>
-                  <AccordionContent className="pb-3">
-                    <ul className="space-y-2 text-sm text-muted-foreground">
-                      <li className="flex items-start gap-2">
-                        <span className="text-muted-foreground">└─</span>
-                        Any of the internal hosts show outbound data spikes
-                      </li>
-                    </ul>
+                  <AccordionContent className="pb-4">
+                    <p className="text-xs text-muted-foreground mb-3 font-mono">Run the following simulation to verify detectability:</p>
+                    <div className="bg-foreground text-background rounded p-2 text-[10px] font-mono mb-3">
+                      $ threat-engine --simulate lateral-mvmt --target {alert.ip}
+                    </div>
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>

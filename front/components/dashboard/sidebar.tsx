@@ -78,37 +78,45 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
 
 function SystemStatus() {
   return (
-    <div className="bg-accent/50 rounded-xl p-3 space-y-3">
-      <div className="flex items-center gap-2">
+    <div className="bg-accent/30 backdrop-blur-sm rounded-xl p-3 space-y-3 border border-white/5 relative overflow-hidden">
+      {/* Scanning effect overlay */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-20">
+        <div className="w-full h-[2px] bg-primary animate-scanning shadow-[0_0_10px_#3b82f6]" />
+      </div>
+
+      <div className="flex items-center gap-2 relative z-10">
         <span className="relative flex h-2 w-2">
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75"></span>
           <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
         </span>
-        <span className="text-xs font-medium text-foreground">Ingesting</span>
-        <span className="text-[10px] font-semibold text-green-600 bg-green-100 px-1.5 py-0.5 rounded">LIVE</span>
+        <span className="text-xs font-semibold text-foreground tracking-tight">INGESTING ENGINE</span>
+        <span className="text-[9px] font-bold text-green-500 bg-green-500/10 px-1.5 py-0.5 rounded border border-green-500/20">LIVE</span>
       </div>
       
-      <div className="space-y-2">
-        <StatusBar label="Network layer" value={847} max={1000} />
-        <StatusBar label="App layer" value={312} max={1000} />
-        <StatusBar label="Endpoint" value={128} max={1000} />
+      <div className="space-y-2 relative z-10">
+        <StatusBar label="Network layer" value={847} max={1000} color="bg-blue-500" />
+        <StatusBar label="App layer" value={312} max={1000} color="bg-purple-500" />
+        <StatusBar label="Endpoint" value={128} max={1000} color="bg-orange-500" />
       </div>
     </div>
   )
 }
 
-function StatusBar({ label, value, max }: { label: string; value: number; max: number }) {
+function StatusBar({ label, value, max, color }: { label: string; value: number; max: number; color: string }) {
   const percentage = (value / max) * 100
   
   return (
     <div className="space-y-1">
       <div className="flex justify-between text-[10px]">
-        <span className="text-muted-foreground">{label}</span>
-        <span className="text-foreground font-medium">{value} eps</span>
+        <span className="text-muted-foreground font-medium">{label}</span>
+        <span className="text-foreground font-bold">{value} eps</span>
       </div>
-      <div className="h-1.5 bg-border rounded-full overflow-hidden">
+      <div className="h-1 bg-white/5 rounded-full overflow-hidden">
         <div 
-          className="h-full bg-primary rounded-full transition-all duration-1000 ease-out"
+          className={cn(
+            "h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_8px_rgba(0,0,0,0.5)]",
+            color
+          )}
           style={{ width: `${percentage}%` }}
         />
       </div>
