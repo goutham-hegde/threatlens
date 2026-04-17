@@ -8,7 +8,7 @@ import shap
 import pickle
 
 print("Loading data...")
-df = pd.read_csv("../data/logs.csv")
+df = pd.read_csv("data/logs.csv")
 
 # -------------------------------------------------------
 # FEATURES: These are the columns the model will USE to learn
@@ -66,7 +66,7 @@ model = RandomForestClassifier(
     random_state=42
 )
 model.fit(X_train, y_train)
-print("Training complete ✅")
+print("Training complete [DONE]")
 
 # -------------------------------------------------------
 # TEST THE MODEL
@@ -84,7 +84,7 @@ print(classification_report(y_test, y_pred, target_names=le.classes_))
 # -------------------------------------------------------
 print("Building SHAP explainer (this takes ~30 seconds)...")
 explainer = shap.TreeExplainer(model)
-print("SHAP ready ✅")
+print("SHAP ready [DONE]")
 
 # -------------------------------------------------------
 # SAVE EVERYTHING
@@ -96,7 +96,7 @@ pickle.dump(le,       open("model/label_encoder.pkl", "wb"))
 pickle.dump(explainer,open("model/explainer.pkl",     "wb"))
 pickle.dump(FEATURES, open("model/features.pkl",      "wb"))
 
-print("\n✅ All files saved to model/ folder:")
+print("\n[DONE] All files saved to model/ folder:")
 print("  model/model.pkl")
 print("  model/label_encoder.pkl")
 print("  model/explainer.pkl")
