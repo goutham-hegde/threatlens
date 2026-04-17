@@ -29,8 +29,7 @@ class LogEvent(BaseModel):
 
 @app.post("/ingest")
 def ingest(event: LogEvent):
-    from model.predict import predict
-
+    
     result = predict(event.dict())
 
     alert = {
@@ -94,8 +93,12 @@ async def simulate(scenario_id: int):
     return {"status": "simulation started", "events": len(subset)}
 
 async def stream_events(df):
+    FIELDS = ["src_ip","dst_ip","dst_port","bytes_out","status_code",
+              "endpoint","failed_logins_1min","unique_dst_ips_5min",
+              "connection_interval_std","timestamp"]
     for _, row in df.iterrows():
-        ingest(LogEvent(**row.to_dict()))
+        event_data = {f: row[f] for f in FIELDS if f in row}
+        ingest(LogEvent(**event_data))
         await asyncio.sleep(0.3)
 
 @app.get("/stats")
