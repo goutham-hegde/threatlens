@@ -1,9 +1,11 @@
 'use client'
 
-import { useState } from 'react'
-import { ChevronDown, Search } from 'lucide-react'
+import { useState, useEffect, useCallback } from 'react'
+import { ChevronDown, Search, RefreshCw } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { mockTimelineEvents, type TimelineEvent, type Severity } from '@/lib/mock-data'
+import { adaptTimelineEvent } from '@/lib/types'
+import type { TimelineEvent, Severity } from '@/lib/types'
+import { fetchTimeline, startPolling } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
@@ -24,33 +26,70 @@ const layerColors: Record<string, string> = {
 }
 
 export function TimelineView() {
+  const [events, setEvents] = useState<TimelineEvent[]>([])
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
+  const [searchQuery, setSearchQuery] = useState('')
+  const [isLoading, setIsLoading] = useState(true)
   const [filter, setFilter] = useState({
     layer: 'all',
     severity: 'all',
     timeRange: '1h'
   })
 
+  const loadTimeline = useCallback(async () => {
+    try {
+      const data = await fetchTimeline()
+      const adapted = data.map(adaptTimelineEvent)
+      // Sort newest first
+      setEvents(adapted.reverse())
+    } catch {
+      // Silent failure
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    const stop = startPolling(loadTimeline, 5000)
+    return stop
+  }, [loadTimeline])
+
   const toggleExpanded = (id: string) => {
     setExpandedIds(prev => {
       const next = new Set(prev)
-      if (next.has(id)) {
-        next.delete(id)
-      } else {
-        next.add(id)
-      }
+      next.has(id) ? next.delete(id) : next.add(id)
       return next
     })
   }
 
+  // Filtering
+  const filtered = events.filter(e => {
+    if (filter.layer !== 'all' && e.layer !== filter.layer) return false
+    if (filter.severity !== 'all' && e.severity !== filter.severity) return false
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase()
+      return e.title.toLowerCase().includes(q) || e.details.some(d => d.toLowerCase().includes(q))
+    }
+    return true
+  })
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-xl font-semibold text-foreground">Cross-Layer Incident Timeline</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Visualize correlated security events across all detection layers
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-semibold text-foreground">Cross-Layer Incident Timeline</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Visualize correlated security events across all detection layers
+          </p>
+        </div>
+        <button
+          onClick={loadTimeline}
+          className="p-2 rounded-lg hover:bg-accent transition-colors"
+          title="Refresh"
+        >
+          <RefreshCw className={cn('w-4 h-4 text-muted-foreground', isLoading && 'animate-spin')} />
+        </button>
       </div>
 
       {/* Filters */}
@@ -63,7 +102,8 @@ export function TimelineView() {
             { value: 'all', label: 'All Layers' },
             { value: 'APP', label: 'Application' },
             { value: 'NET', label: 'Network' },
-            { value: 'END', label: 'Endpoint' }
+            { value: 'END', label: 'Endpoint' },
+            { value: 'SYSTEM', label: 'System' }
           ]}
         />
         <FilterDropdown
@@ -78,38 +118,48 @@ export function TimelineView() {
             { value: 'low', label: 'Low' }
           ]}
         />
-        <FilterDropdown
-          label="Last 1h"
-          value={filter.timeRange}
-          onChange={(v) => setFilter(prev => ({ ...prev, timeRange: v }))}
-          options={[
-            { value: '1h', label: 'Last 1h' },
-            { value: '6h', label: 'Last 6h' },
-            { value: '24h', label: 'Last 24h' },
-            { value: '7d', label: 'Last 7 days' }
-          ]}
-        />
         <div className="relative flex-1 max-w-xs">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input 
-            placeholder="Search events..." 
+          <Input
+            placeholder="Search events…"
             className="pl-9"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
           />
         </div>
+        {events.length > 0 && (
+          <span className="text-xs text-muted-foreground ml-auto">
+            {filtered.length} / {events.length} events
+          </span>
+        )}
       </div>
 
       {/* Timeline */}
       <div className="bg-card rounded-xl border border-border">
-        <div className="divide-y divide-border">
-          {mockTimelineEvents.map((event) => (
-            <TimelineEventRow
-              key={event.id}
-              event={event}
-              isExpanded={expandedIds.has(event.id)}
-              onToggle={() => toggleExpanded(event.id)}
-            />
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="p-8 flex items-center justify-center gap-2 text-muted-foreground">
+            <RefreshCw className="w-4 h-4 animate-spin" />
+            <span className="text-sm">Loading timeline…</span>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="p-8 flex flex-col items-center justify-center gap-3 text-muted-foreground">
+            <p className="text-sm">No timeline events yet</p>
+            <p className="text-xs text-center">
+              Run a simulation or ingest events to build the incident timeline
+            </p>
+          </div>
+        ) : (
+          <div className="divide-y divide-border">
+            {filtered.map((event) => (
+              <TimelineEventRow
+                key={event.id}
+                event={event}
+                isExpanded={expandedIds.has(event.id)}
+                onToggle={() => toggleExpanded(event.id)}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )
@@ -123,8 +173,6 @@ interface FilterDropdownProps {
 }
 
 function FilterDropdown({ value, onChange, options }: FilterDropdownProps) {
-  const selectedOption = options.find(o => o.value === value)
-  
   return (
     <div className="relative">
       <select
@@ -150,17 +198,17 @@ interface TimelineEventRowProps {
 }
 
 function TimelineEventRow({ event, isExpanded, onToggle }: TimelineEventRowProps) {
-  const severityInfo = severityIcons[event.severity]
-  const layerColor = layerColors[event.layer]
+  const severityInfo = severityIcons[event.severity] ?? severityIcons.low
+  const layerColor = layerColors[event.layer] || 'bg-gray-100 text-gray-700'
 
   return (
-    <div 
+    <div
       className={cn(
         'group transition-all duration-300',
         event.isCrossLayer && 'bg-amber-50/50'
       )}
     >
-      <div 
+      <div
         className="flex items-start gap-4 p-4 cursor-pointer hover:bg-accent/50 transition-colors"
         onClick={onToggle}
       >
@@ -190,10 +238,10 @@ function TimelineEventRow({ event, isExpanded, onToggle }: TimelineEventRowProps
             {!event.isCrossLayer && (
               <span className="text-sm">{severityInfo.icon}</span>
             )}
-            <span className="text-sm font-medium text-foreground">{event.title}</span>
+            <span className="text-sm font-medium text-foreground truncate">{event.title}</span>
           </div>
-          
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+
+          <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
             {event.details.map((detail, i) => (
               <span key={i} className="flex items-center gap-1">
                 {i > 0 && <span className="text-border">|</span>}

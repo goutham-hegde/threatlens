@@ -11,7 +11,7 @@ import { SettingsView } from '@/components/dashboard/settings-view'
 import { AlertDetailPanel } from '@/components/dashboard/alert-detail-panel'
 import { AlertFeed } from '@/components/dashboard/alert-feed'
 import { LandingPage } from '@/components/dashboard/landing-page'
-import type { Alert } from '@/lib/mock-data'
+import type { Alert } from '@/lib/types'
 
 export default function DashboardPage() {
   const [showLanding, setShowLanding] = useState(true)

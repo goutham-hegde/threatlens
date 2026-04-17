@@ -4,7 +4,7 @@ import { NarrativeBanner } from './narrative-banner'
 import { KPICards } from './kpi-cards'
 import { AlertFeed } from './alert-feed'
 import { ThreatDistribution } from './threat-distribution'
-import type { Alert } from '@/lib/mock-data'
+import type { Alert } from '@/lib/types'
 
 interface OverviewViewProps {
   onViewAlertDetails: (alert: Alert) => void

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import type { Alert, Severity } from '@/lib/mock-data'
+import type { Alert, Severity } from '@/lib/types'
 
 interface AlertCardProps {
   alert: Alert
