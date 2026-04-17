@@ -1,103 +1,110 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import asyncio
-import json
+from pydantic import BaseModel
+from typing import Optional
+import uuid, time, asyncio, pandas as pd
 from datetime import datetime
-from typing import List
+import sys; sys.path.append("..")
 
-from .schemas import (
-    AnalyticsStats, AlertBrief, AlertDetail, IncidentEvent, 
-    ThreatDistribution, SeverityBreakdown, Scenario
-)
-from .mock_data import (
-    ALERTS_INITIAL, ALERT_DETAILS, TIMELINE_EVENTS, 
-    ANALYTICS, THREAT_DISTRIBUTION, SEVERITY_BREAKDOWN,
-    BASE_TIME
-)
-from .simulation import simulation_manager
+app = FastAPI()
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
-app = FastAPI(title="ThreatLens API")
+# In-memory store
+alerts = []
+incidents = []
 
-# Configure CORS for the hackathon (allow all origins/methods/headers)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+class LogEvent(BaseModel):
+    timestamp: Optional[str] = None
+    src_ip: str
+    dst_ip: str
+    dst_port: int
+    bytes_out: int
+    status_code: int
+    endpoint: str
+    failed_logins_1min: float = 0
+    unique_dst_ips_5min: float = 1
+    connection_interval_std: float = 30
+    layer: str = "network"
 
-@app.get("/overview")
-async def get_overview():
-    return {
-        "stats": ANALYTICS,
-        "initial_alerts": ALERTS_INITIAL
+@app.post("/ingest")
+def ingest(event: LogEvent):
+    from model.predict import predict
+    result = predict(event.dict())
+
+    alert = {
+        "id": f"evt_{uuid.uuid4().hex[:6]}",
+        "timestamp": event.timestamp or datetime.now().isoformat(),
+        "src_ip": event.src_ip,
+        "dst_ip": event.dst_ip,
+        "layer": event.layer,
+        **result
     }
 
-@app.get("/analytics")
-async def get_analytics():
-    return {
-        "distribution": THREAT_DISTRIBUTION,
-        "severity": SEVERITY_BREAKDOWN
-    }
+    if result["threat_type"] != "benign" or result["is_false_positive"]:
+        alerts.insert(0, alert)
+        correlate(alert)
 
-@app.get("/timeline")
-async def get_timeline() -> List[IncidentEvent]:
-    return TIMELINE_EVENTS
+    return alert
 
-@app.get("/alerts/{alert_id}")
-async def get_alert_detail(alert_id: str) -> AlertDetail:
-    if alert_id not in ALERT_DETAILS:
-        raise HTTPException(status_code=404, detail="Alert not found")
-    return ALERT_DETAILS[alert_id]
+@app.get("/alerts")
+def get_alerts(limit: int = 20):
+    return alerts[:limit]
 
-@app.get("/scenarios")
-async def get_scenarios() -> List[Scenario]:
-    return simulation_manager.get_scenarios()
+@app.get("/incidents")
+def get_incidents():
+    return incidents
 
-@app.post("/scenarios/{scenario_id}/launch")
-async def launch_simulation(scenario_id: str):
-    # This just validates the ID, the actual work happens via WebSocket
-    return {"status": "ready", "scenario_id": scenario_id}
+def correlate(new_alert):
+    # Group alerts by src_ip — if 2+ layers fire within 5 min, create incident
+    same_ip = [a for a in alerts if a["src_ip"] == new_alert["src_ip"]]
+    layers_hit = list(set(a["layer"] for a in same_ip))
 
-# Real-time WebSocket for Live Alert Stream
-@app.websocket("/ws/alerts")
-async def websocket_alerts(websocket: WebSocket):
-    await websocket.accept()
-    try:
-        # Initial batch
-        for alert in ALERTS_INITIAL:
-            await websocket.send_text(alert.json())
-            await asyncio.sleep(0.1)
-        
-        # Continuous stream for demo
-        count = len(ALERTS_INITIAL) + 1
-        while True:
-            await asyncio.sleep(3) # New alert every 3 seconds as requested
-            new_alert = ALERTS_INITIAL[0].copy(update={
-                "id": f"alert-{count}",
-                "timestamp": datetime.now(),
-                "title": "Suspected Credential Stuffing" if count % 2 == 0 else "Anomalous Network Traffic"
+    if len(layers_hit) >= 2:
+        existing = next((i for i in incidents if i["src_ip"] == new_alert["src_ip"]), None)
+        if not existing:
+            incidents.insert(0, {
+                "id": f"inc_{uuid.uuid4().hex[:6]}",
+                "src_ip": new_alert["src_ip"],
+                "severity": "critical",
+                "layers": layers_hit,
+                "alert_count": len(same_ip),
+                "first_seen": same_ip[-1]["timestamp"],
+                "last_seen": same_ip[0]["timestamp"],
+                "threat_types": list(set(a["threat_type"] for a in same_ip)),
+                "summary": f"Cross-layer incident: {' + '.join(layers_hit)} signals correlated for {new_alert['src_ip']}"
             })
-            await websocket.send_text(new_alert.json())
-            count += 1
-    except WebSocketDisconnect:
-        print("Alert stream disconnected")
 
-# Real-time WebSocket for Simulation Logs
-@app.websocket("/ws/simulation/{scenario_id}")
-async def websocket_simulation(websocket: WebSocket, scenario_id: str):
-    await websocket.accept()
-    try:
-        async def send_log(message: str):
-            await websocket.send_json({"type": "log", "content": message, "timestamp": datetime.now().isoformat()})
-        
-        await simulation_manager.run_scenario(scenario_id, send_log)
-    except WebSocketDisconnect:
-        print(f"Simulation {scenario_id} disconnected")
-    finally:
-        await websocket.close()
+@app.post("/simulate/{scenario_id}")
+async def simulate(scenario_id: int):
+    import pandas as pd
+    df = pd.read_csv("data/logs.csv")
 
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    if scenario_id == 1:
+        subset = df[df['label'].isin(['brute_force', 'lateral_movement'])].head(50)
+    elif scenario_id == 2:
+        subset = df[df['label'].isin(['c2_beacon'])].head(40)
+    else:
+        subset = df[df['label'] == 'benign'].head(30)
+
+    # Stream events in background
+    asyncio.create_task(stream_events(subset))
+    return {"status": "simulation started", "events": len(subset)}
+
+async def stream_events(df):
+    for _, row in df.iterrows():
+        ingest(LogEvent(**row.to_dict()))
+        await asyncio.sleep(0.3)
+
+@app.get("/stats")
+def get_stats():
+    from collections import Counter
+    types = Counter(a["threat_type"] for a in alerts)
+    sevs = Counter(a["severity"] for a in alerts)
+    return {
+        "total_alerts": len(alerts),
+        "active_incidents": len(incidents),
+        "false_positives": sum(1 for a in alerts if a["is_false_positive"]),
+        "avg_confidence": round(sum(a["confidence"] for a in alerts) / max(len(alerts),1), 3),
+        "threat_breakdown": dict(types),
+        "severity_breakdown": dict(sevs)
+    }
