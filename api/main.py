@@ -30,18 +30,20 @@ class LogEvent(BaseModel):
 @app.post("/ingest")
 def ingest(event: LogEvent):
     from model.predict import predict
+
     result = predict(event.dict())
 
     alert = {
-        "id": f"evt_{uuid.uuid4().hex[:6]}",
+        "id":        f"evt_{uuid.uuid4().hex[:6]}",
         "timestamp": event.timestamp or datetime.now().isoformat(),
-        "src_ip": event.src_ip,
-        "dst_ip": event.dst_ip,
-        "layer": event.layer,
+        "src_ip":    event.src_ip,
+        "dst_ip":    event.dst_ip,
+        "endpoint":  event.endpoint,
+        "layer":     event.layer,
         **result
     }
 
-    if result["threat_type"] != "benign" or result["is_false_positive"]:
+    if alert["threat_type"] != "benign" or alert["is_false_positive"]:
         alerts.insert(0, alert)
         correlate(alert)
 
@@ -109,3 +111,39 @@ def get_stats():
         "threat_breakdown": dict(types),
         "severity_breakdown": dict(sevs)
     }
+@app.get("/timeline")
+def get_timeline():
+    sorted_alerts = sorted(alerts, key=lambda x: x["timestamp"])
+    timeline = []
+    for a in sorted_alerts:
+        timeline.append({
+            "timestamp":    a["timestamp"],
+            "layer":        a["layer"].upper(),
+            "severity":     a["severity"],
+            "event":        a["reason"],
+            "src_ip":       a["src_ip"],
+            "threat_type":  a["threat_type"],
+            "mitre_tags":   a["mitre_tags"],
+            "is_correlation": False
+        })
+    for inc in incidents:
+        timeline.append({
+            "timestamp":  inc["last_seen"],
+            "layer":      "SYSTEM",
+            "severity":   "critical",
+            "event":      f"CROSS-LAYER INCIDENT — {' + '.join(inc['layers'])} correlated for {inc['src_ip']}",
+            "src_ip":     inc["src_ip"],
+            "is_correlation": True
+        })
+    return sorted(timeline, key=lambda x: x["timestamp"])
+
+@app.get("/alerts/{alert_id}")
+def get_alert(alert_id: str):
+    match = next((a for a in alerts if a["id"] == alert_id), None)
+    return match or {"error": "not found"}
+
+@app.delete("/reset")
+def reset():
+    alerts.clear()
+    incidents.clear()
+    return {"status": "cleared"}
