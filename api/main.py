@@ -4,7 +4,8 @@ from pydantic import BaseModel
 from typing import Optional
 import uuid, time, asyncio, pandas as pd
 from datetime import datetime
-import sys; sys.path.append("..")
+import sys
+from model.predict import predict
 
 app = FastAPI()
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
