@@ -354,7 +354,7 @@ def generate_fp_admin_backup(n=150):
             "same_dst_ip_streak":     i + 1,
             "is_external_dst":        1,
             "hour_of_day":            2,
-            "label":                  "benign"   # IT IS BENIGN
+            "label":                  "false_positive"   # IT IS A FALSE POSITIVE
         })
     return pd.DataFrame(rows)
 
@@ -390,7 +390,7 @@ def generate_fp_monitoring_bot(n=200):
             "same_dst_ip_streak":     i + 1,
             "is_external_dst":        0,   # KEY DIFFERENCE: internal destination, not external
             "hour_of_day":            int((i * interval % 86400) / 3600),
-            "label":                  "benign"
+            "label":                  "false_positive"
         })
     return pd.DataFrame(rows)
 
@@ -424,7 +424,7 @@ def generate_fp_stress_test(n=400):
             "same_dst_ip_streak":     i + 1,
             "is_external_dst":        0,
             "hour_of_day":            2,
-            "label":                  "benign"
+            "label":                  "false_positive"
         })
     return pd.DataFrame(rows)
 
@@ -460,7 +460,7 @@ def generate_fp_security_scanner(n=500):
             "same_dst_ip_streak":     0,
             "is_external_dst":        0,
             "hour_of_day":            2,
-            "label":                  "benign"   # scheduled scan = benign
+            "label":                  "false_positive"   # scheduled scan = false positive
         })
     return pd.DataFrame(rows)
 
@@ -486,7 +486,7 @@ if __name__ == "__main__":
     }
 
     for name, df in components.items():
-        print(f"  ✓ {name:<35} {len(df):>6} rows")
+        print(f"  [OK] {name:<35} {len(df):>6} rows")
 
     print("\nCombining and shuffling...")
     full_df = pd.concat(components.values()).sample(frac=1, random_state=42).reset_index(drop=True)
@@ -509,4 +509,4 @@ if __name__ == "__main__":
         labels = subset['label'].value_counts().to_dict()
         print(f"  {ip:<15} → {labels}")
 
-    print("\nAll false positive IPs are correctly labelled as benign ✅")
+    print("\nAll false positive IPs are correctly labelled as false_positive ✅")

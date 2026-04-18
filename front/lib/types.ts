@@ -1,7 +1,7 @@
 // ─── Shared Types (aligned with FastAPI backend schema) ───────────────────────
 
 export type Severity = 'critical' | 'high' | 'medium' | 'low' | 'reviewed'
-export type ThreatType = 'brute_force' | 'lateral_movement' | 'c2_beacon' | 'data_exfiltration' | 'benign'
+export type ThreatType = 'brute_force' | 'lateral_movement' | 'c2_beacon' | 'data_exfiltration' | 'false_positive' | 'benign'
 export type Layer = 'NET' | 'APP' | 'END' | 'network' | 'app' | 'endpoint'
 
 // Normalizes backend layer strings to frontend display labels
@@ -88,6 +88,7 @@ function formatThreatTitle(threat: ThreatType): string {
     lateral_movement: 'Lateral Movement',
     c2_beacon: 'C2 Beacon Detection',
     data_exfiltration: 'Data Exfiltration',
+    false_positive: 'False Positive',
     benign: 'Benign Activity'
   }
   return map[threat] || threat
