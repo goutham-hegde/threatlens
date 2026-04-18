@@ -204,20 +204,45 @@ function FeatureCard({
 
 // Animated background particles
 function Particles() {
+  const [mounted, setMounted] = useState(false)
+  const [particleData, setParticleData] = useState<{
+    width: string;
+    height: string;
+    left: string;
+    top: string;
+    color: string;
+    animation: string;
+  }[]>([])
+
+  useEffect(() => {
+    const data = Array.from({ length: 20 }).map((_, i) => ({
+      width: `${Math.random() * 3 + 1}px`,
+      height: `${Math.random() * 3 + 1}px`,
+      left: `${Math.random() * 100}%`,
+      top: `${100 + Math.random() * 20}%`,
+      color: i % 3 === 0 ? '#06B6D4' : i % 3 === 1 ? '#8B5CF6' : '#10B981',
+      animation: `particle-drift ${8 + Math.random() * 12}s linear ${Math.random() * 10}s infinite`
+    }))
+    setParticleData(data)
+    setMounted(true)
+  }, [])
+
+  if (!mounted) return null
+
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {Array.from({ length: 20 }).map((_, i) => (
+      {particleData.map((p, i) => (
         <div
           key={i}
           className="absolute rounded-full"
           style={{
-            width: `${Math.random() * 3 + 1}px`,
-            height: `${Math.random() * 3 + 1}px`,
-            left: `${Math.random() * 100}%`,
-            top: `${100 + Math.random() * 20}%`,
-            background: i % 3 === 0 ? '#06B6D4' : i % 3 === 1 ? '#8B5CF6' : '#10B981',
+            width: p.width,
+            height: p.height,
+            left: p.left,
+            top: p.top,
+            background: p.color,
             opacity: 0,
-            animation: `particle-drift ${8 + Math.random() * 12}s linear ${Math.random() * 10}s infinite`,
+            animation: p.animation,
           }}
         />
       ))}
