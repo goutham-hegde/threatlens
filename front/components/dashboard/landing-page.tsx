@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { Shield, ArrowRight, Radar, Network, BarChart2, Play, ChevronDown } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface LandingPageProps {
   onEnter: () => void
@@ -58,10 +59,12 @@ function FeatureCard({
   feature,
   index,
   onEnter,
+  isMounted,
 }: {
   feature: (typeof features)[0]
   index: number
   onEnter: () => void
+  isMounted: boolean
 }) {
   const cardRef = useRef<HTMLDivElement>(null)
   const [tilt, setTilt] = useState({ x: 0, y: 0 })
@@ -99,7 +102,10 @@ function FeatureCard({
   return (
     <div
       ref={cardRef}
-      className="perspective-card cursor-pointer"
+      className={cn(
+        "perspective-card cursor-pointer opacity-0",
+        isMounted && "animate-fade-in"
+      )}
       style={{ animationDelay: `${index * 0.15}s` }}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
@@ -204,6 +210,14 @@ function FeatureCard({
 
 // Animated background particles
 function Particles() {
+  const [isClient, setIsClient] = useState(false)
+  
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
+  if (!isClient) return null
+
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
       {Array.from({ length: 20 }).map((_, i) => (
@@ -301,12 +315,10 @@ export function LandingPage({ onEnter }: LandingPageProps) {
 
       {/* ─── HERO ─── */}
       <div
-        className="relative z-10 flex flex-col items-center text-center pt-20 pb-16 px-6"
-        style={{
-          opacity: mounted ? 1 : 0,
-          transform: mounted ? 'translateY(0)' : 'translateY(20px)',
-          transition: 'opacity 0.8s ease, transform 0.8s ease',
-        }}
+        className={cn(
+          "relative z-10 flex flex-col items-center text-center pt-20 pb-16 px-6 opacity-0",
+          mounted && "animate-fade-in"
+        )}
       >
         {/* Badge */}
         <div
@@ -381,11 +393,11 @@ export function LandingPage({ onEnter }: LandingPageProps) {
 
       {/* ─── FEATURE CARDS ─── */}
       <div
-        className="relative z-10 w-full max-w-6xl px-6 pb-24"
-        style={{
-          opacity: mounted ? 1 : 0,
-          transition: 'opacity 1s ease 0.3s',
-        }}
+        className={cn(
+          "relative z-10 w-full max-w-6xl px-6 pb-24 opacity-0",
+          mounted && "animate-fade-in"
+        )}
+        style={{ animationDelay: '0.3s' }}
       >
         {/* Section label */}
         <div className="flex items-center gap-4 mb-8">
@@ -398,7 +410,7 @@ export function LandingPage({ onEnter }: LandingPageProps) {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {features.map((feature, i) => (
-            <FeatureCard key={feature.title} feature={feature} index={i} onEnter={onEnter} />
+            <FeatureCard key={feature.title} feature={feature} index={i} onEnter={onEnter} isMounted={mounted} />
           ))}
         </div>
 

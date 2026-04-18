@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { cn } from '@/lib/utils'
 import { Sidebar } from '@/components/dashboard/sidebar'
 import { TopBar } from '@/components/dashboard/top-bar'
 import { OverviewView } from '@/components/dashboard/overview-view'
@@ -15,12 +16,17 @@ import type { Alert } from '@/lib/mock-data'
 
 export default function DashboardPage() {
   const [showLanding, setShowLanding] = useState(true)
+  const [isTransitioning, setIsTransitioning] = useState(false)
   const [activeView, setActiveView] = useState('overview')
   const [selectedAlert, setSelectedAlert] = useState<Alert | null>(null)
   const [isDetailPanelOpen, setIsDetailPanelOpen] = useState(false)
 
   const handleEnterDashboard = () => {
-    setShowLanding(false)
+    setIsTransitioning(true)
+    setTimeout(() => {
+      setShowLanding(false)
+      setIsTransitioning(false)
+    }, 500)
   }
 
   const handleViewAlertDetails = (alert: Alert) => {
@@ -66,32 +72,39 @@ export default function DashboardPage() {
     }
   }
 
-  if (showLanding) {
-    return <LandingPage onEnter={handleEnterDashboard} />
-  }
-
   return (
-    <div className="min-h-screen bg-background">
-      {/* Sidebar */}
-      <Sidebar activeView={activeView} onViewChange={setActiveView} />
+    <>
+      {showLanding ? (
+        <div className={cn(
+          "transition-opacity duration-500 ease-in-out",
+          isTransitioning ? "opacity-0" : "opacity-100"
+        )}>
+          <LandingPage onEnter={handleEnterDashboard} />
+        </div>
+      ) : (
+        <div className="min-h-screen bg-background animate-in fade-in duration-700">
+          {/* Sidebar */}
+          <Sidebar activeView={activeView} onViewChange={setActiveView} />
 
-      {/* Main Content */}
-      <div className="pl-[220px]">
-        {/* Top Bar */}
-        <TopBar currentView={activeView} onRunSimulation={handleRunSimulation} />
+          {/* Main Content */}
+          <div className="pl-[220px]">
+            {/* Top Bar */}
+            <TopBar currentView={activeView} onRunSimulation={handleRunSimulation} />
 
-        {/* Page Content */}
-        <main className="p-6">
-          {renderView()}
-        </main>
-      </div>
+            {/* Page Content */}
+            <main className="p-6">
+              {renderView()}
+            </main>
+          </div>
 
-      {/* Alert Detail Panel */}
-      <AlertDetailPanel
-        alert={selectedAlert}
-        isOpen={isDetailPanelOpen}
-        onClose={handleCloseDetailPanel}
-      />
-    </div>
+          {/* Alert Detail Panel */}
+          <AlertDetailPanel
+            alert={selectedAlert}
+            isOpen={isDetailPanelOpen}
+            onClose={handleCloseDetailPanel}
+          />
+        </div>
+      )}
+    </>
   )
 }
