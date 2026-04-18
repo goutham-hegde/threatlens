@@ -1,7 +1,10 @@
 'use client'
 
 import { useState } from 'react'
+<<<<<<< HEAD
 import { cn } from '@/lib/utils'
+=======
+>>>>>>> faa6da9db9a856407276fd50c63b58931fd78442
 import { Sidebar } from '@/components/dashboard/sidebar'
 import { TopBar } from '@/components/dashboard/top-bar'
 import { OverviewView } from '@/components/dashboard/overview-view'
@@ -12,21 +15,32 @@ import { SettingsView } from '@/components/dashboard/settings-view'
 import { AlertDetailPanel } from '@/components/dashboard/alert-detail-panel'
 import { AlertFeed } from '@/components/dashboard/alert-feed'
 import { LandingPage } from '@/components/dashboard/landing-page'
+<<<<<<< HEAD
 import type { Alert } from '@/lib/mock-data'
 
 export default function DashboardPage() {
   const [showLanding, setShowLanding] = useState(true)
   const [isTransitioning, setIsTransitioning] = useState(false)
+=======
+import type { Alert } from '@/lib/types'
+
+export default function DashboardPage() {
+  const [showLanding, setShowLanding] = useState(true)
+>>>>>>> faa6da9db9a856407276fd50c63b58931fd78442
   const [activeView, setActiveView] = useState('overview')
   const [selectedAlert, setSelectedAlert] = useState<Alert | null>(null)
   const [isDetailPanelOpen, setIsDetailPanelOpen] = useState(false)
 
   const handleEnterDashboard = () => {
+<<<<<<< HEAD
     setIsTransitioning(true)
     setTimeout(() => {
       setShowLanding(false)
       setIsTransitioning(false)
     }, 500)
+=======
+    setShowLanding(false)
+>>>>>>> faa6da9db9a856407276fd50c63b58931fd78442
   }
 
   const handleViewAlertDetails = (alert: Alert) => {
@@ -72,6 +86,7 @@ export default function DashboardPage() {
     }
   }
 
+<<<<<<< HEAD
   return (
     <>
       {showLanding ? (
@@ -106,5 +121,34 @@ export default function DashboardPage() {
         </div>
       )}
     </>
+=======
+  if (showLanding) {
+    return <LandingPage onEnter={handleEnterDashboard} />
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Sidebar */}
+      <Sidebar activeView={activeView} onViewChange={setActiveView} />
+
+      {/* Main Content */}
+      <div className="pl-[220px]">
+        {/* Top Bar */}
+        <TopBar currentView={activeView} onRunSimulation={handleRunSimulation} />
+
+        {/* Page Content */}
+        <main className="p-6">
+          {renderView()}
+        </main>
+      </div>
+
+      {/* Alert Detail Panel */}
+      <AlertDetailPanel
+        alert={selectedAlert}
+        isOpen={isDetailPanelOpen}
+        onClose={handleCloseDetailPanel}
+      />
+    </div>
+>>>>>>> faa6da9db9a856407276fd50c63b58931fd78442
   )
 }

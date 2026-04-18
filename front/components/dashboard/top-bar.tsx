@@ -3,7 +3,10 @@
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Play } from 'lucide-react'
+<<<<<<< HEAD
 import { cn } from '@/lib/utils'
+=======
+>>>>>>> faa6da9db9a856407276fd50c63b58931fd78442
 
 interface TopBarProps {
   currentView: string
@@ -15,7 +18,13 @@ export function TopBar({ currentView, onRunSimulation }: TopBarProps) {
 
   useEffect(() => {
     setCurrentTime(new Date())
+<<<<<<< HEAD
     const interval = setInterval(() => setCurrentTime(new Date()), 1000)
+=======
+    const interval = setInterval(() => {
+      setCurrentTime(new Date())
+    }, 1000)
+>>>>>>> faa6da9db9a856407276fd50c63b58931fd78442
     return () => clearInterval(interval)
   }, [])
 
@@ -23,8 +32,14 @@ export function TopBar({ currentView, onRunSimulation }: TopBarProps) {
     return date.toLocaleDateString('en-US', {
       weekday: 'short',
       month: 'short',
+<<<<<<< HEAD
       day: 'numeric'
     }).toUpperCase()
+=======
+      day: 'numeric',
+      year: 'numeric'
+    })
+>>>>>>> faa6da9db9a856407276fd50c63b58931fd78442
   }
 
   const formatTime = (date: Date) => {
@@ -32,13 +47,18 @@ export function TopBar({ currentView, onRunSimulation }: TopBarProps) {
       hour: '2-digit',
       minute: '2-digit',
       second: '2-digit',
+<<<<<<< HEAD
       hour12: false
+=======
+      hour12: true
+>>>>>>> faa6da9db9a856407276fd50c63b58931fd78442
     })
   }
 
   const getViewTitle = (view: string) => {
     const titles: Record<string, string> = {
       'overview': 'Overview',
+<<<<<<< HEAD
       'live-feed': 'Real-time Feed',
       'timeline': 'Correlation Timeline',
       'simulation': 'Cyber Range',
@@ -89,6 +109,38 @@ export function TopBar({ currentView, onRunSimulation }: TopBarProps) {
           Start Simulation
         </Button>
       </div>
+=======
+      'live-feed': 'Live Feed',
+      'timeline': 'Incident Timeline',
+      'simulation': 'Simulation Mode',
+      'analytics': 'Analytics',
+      'settings': 'Settings'
+    }
+    return titles[view] || 'Overview'
+  }
+
+  return (
+    <div className="h-14 border-b border-border bg-card flex items-center justify-between px-6">
+      <div className="flex items-center gap-3">
+        <span className="text-sm font-medium text-foreground">{getViewTitle(currentView)}</span>
+        {currentTime && (
+          <>
+            <span className="text-muted-foreground">|</span>
+            <span className="text-sm text-muted-foreground">
+              {formatDate(currentTime)} — {formatTime(currentTime)}
+            </span>
+          </>
+        )}
+      </div>
+
+      <Button 
+        onClick={onRunSimulation}
+        className="bg-primary hover:bg-primary/90 text-primary-foreground active:scale-95 transition-transform"
+      >
+        <Play className="w-4 h-4 mr-2" />
+        Run Simulation
+      </Button>
+>>>>>>> faa6da9db9a856407276fd50c63b58931fd78442
     </div>
   )
 }

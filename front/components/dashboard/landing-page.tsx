@@ -2,7 +2,10 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { Shield, ArrowRight, Radar, Network, BarChart2, Play, ChevronDown } from 'lucide-react'
+<<<<<<< HEAD
 import { cn } from '@/lib/utils'
+=======
+>>>>>>> faa6da9db9a856407276fd50c63b58931fd78442
 
 interface LandingPageProps {
   onEnter: () => void
@@ -59,12 +62,18 @@ function FeatureCard({
   feature,
   index,
   onEnter,
+<<<<<<< HEAD
   isMounted,
+=======
+>>>>>>> faa6da9db9a856407276fd50c63b58931fd78442
 }: {
   feature: (typeof features)[0]
   index: number
   onEnter: () => void
+<<<<<<< HEAD
   isMounted: boolean
+=======
+>>>>>>> faa6da9db9a856407276fd50c63b58931fd78442
 }) {
   const cardRef = useRef<HTMLDivElement>(null)
   const [tilt, setTilt] = useState({ x: 0, y: 0 })
@@ -102,10 +111,14 @@ function FeatureCard({
   return (
     <div
       ref={cardRef}
+<<<<<<< HEAD
       className={cn(
         "perspective-card cursor-pointer opacity-0",
         isMounted && "animate-fade-in"
       )}
+=======
+      className="perspective-card cursor-pointer"
+>>>>>>> faa6da9db9a856407276fd50c63b58931fd78442
       style={{ animationDelay: `${index * 0.15}s` }}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
@@ -210,6 +223,7 @@ function FeatureCard({
 
 // Animated background particles
 function Particles() {
+<<<<<<< HEAD
   const [isClient, setIsClient] = useState(false)
   
   useEffect(() => {
@@ -221,10 +235,41 @@ function Particles() {
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
       {Array.from({ length: 20 }).map((_, i) => (
+=======
+  const [mounted, setMounted] = useState(false)
+  const [particleData, setParticleData] = useState<{
+    width: string;
+    height: string;
+    left: string;
+    top: string;
+    color: string;
+    animation: string;
+  }[]>([])
+
+  useEffect(() => {
+    const data = Array.from({ length: 20 }).map((_, i) => ({
+      width: `${Math.random() * 3 + 1}px`,
+      height: `${Math.random() * 3 + 1}px`,
+      left: `${Math.random() * 100}%`,
+      top: `${100 + Math.random() * 20}%`,
+      color: i % 3 === 0 ? '#06B6D4' : i % 3 === 1 ? '#8B5CF6' : '#10B981',
+      animation: `particle-drift ${8 + Math.random() * 12}s linear ${Math.random() * 10}s infinite`
+    }))
+    setParticleData(data)
+    setMounted(true)
+  }, [])
+
+  if (!mounted) return null
+
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {particleData.map((p, i) => (
+>>>>>>> faa6da9db9a856407276fd50c63b58931fd78442
         <div
           key={i}
           className="absolute rounded-full"
           style={{
+<<<<<<< HEAD
             width: `${Math.random() * 3 + 1}px`,
             height: `${Math.random() * 3 + 1}px`,
             left: `${Math.random() * 100}%`,
@@ -232,6 +277,15 @@ function Particles() {
             background: i % 3 === 0 ? '#06B6D4' : i % 3 === 1 ? '#8B5CF6' : '#10B981',
             opacity: 0,
             animation: `particle-drift ${8 + Math.random() * 12}s linear ${Math.random() * 10}s infinite`,
+=======
+            width: p.width,
+            height: p.height,
+            left: p.left,
+            top: p.top,
+            background: p.color,
+            opacity: 0,
+            animation: p.animation,
+>>>>>>> faa6da9db9a856407276fd50c63b58931fd78442
           }}
         />
       ))}
@@ -315,10 +369,19 @@ export function LandingPage({ onEnter }: LandingPageProps) {
 
       {/* ─── HERO ─── */}
       <div
+<<<<<<< HEAD
         className={cn(
           "relative z-10 flex flex-col items-center text-center pt-20 pb-16 px-6 opacity-0",
           mounted && "animate-fade-in"
         )}
+=======
+        className="relative z-10 flex flex-col items-center text-center pt-20 pb-16 px-6"
+        style={{
+          opacity: mounted ? 1 : 0,
+          transform: mounted ? 'translateY(0)' : 'translateY(20px)',
+          transition: 'opacity 0.8s ease, transform 0.8s ease',
+        }}
+>>>>>>> faa6da9db9a856407276fd50c63b58931fd78442
       >
         {/* Badge */}
         <div
@@ -393,11 +456,19 @@ export function LandingPage({ onEnter }: LandingPageProps) {
 
       {/* ─── FEATURE CARDS ─── */}
       <div
+<<<<<<< HEAD
         className={cn(
           "relative z-10 w-full max-w-6xl px-6 pb-24 opacity-0",
           mounted && "animate-fade-in"
         )}
         style={{ animationDelay: '0.3s' }}
+=======
+        className="relative z-10 w-full max-w-6xl px-6 pb-24"
+        style={{
+          opacity: mounted ? 1 : 0,
+          transition: 'opacity 1s ease 0.3s',
+        }}
+>>>>>>> faa6da9db9a856407276fd50c63b58931fd78442
       >
         {/* Section label */}
         <div className="flex items-center gap-4 mb-8">
@@ -410,7 +481,11 @@ export function LandingPage({ onEnter }: LandingPageProps) {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {features.map((feature, i) => (
+<<<<<<< HEAD
             <FeatureCard key={feature.title} feature={feature} index={i} onEnter={onEnter} isMounted={mounted} />
+=======
+            <FeatureCard key={feature.title} feature={feature} index={i} onEnter={onEnter} />
+>>>>>>> faa6da9db9a856407276fd50c63b58931fd78442
           ))}
         </div>
 

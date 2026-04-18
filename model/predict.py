@@ -12,6 +12,10 @@ SEVERITY_MAP = {
     "lateral_movement":  "critical",
     "c2_beacon":         "high",
     "data_exfiltration": "high",
+<<<<<<< HEAD
+=======
+    "false_positive":    "low",
+>>>>>>> faa6da9db9a856407276fd50c63b58931fd78442
     "benign":            "low"
 }
 
@@ -20,6 +24,10 @@ MITRE_MAP = {
     "lateral_movement":  ["T1021"],
     "c2_beacon":         ["T1071"],
     "data_exfiltration": ["T1048"],
+<<<<<<< HEAD
+=======
+    "false_positive":    [],
+>>>>>>> faa6da9db9a856407276fd50c63b58931fd78442
     "benign":            []
 }
 
@@ -28,6 +36,10 @@ KILL_CHAIN = {
     "lateral_movement":  {"stage": "Lateral Movement",   "stage_idx": 5, "next": "Data Exfiltration"},
     "c2_beacon":         {"stage": "Command & Control",  "stage_idx": 6, "next": "Exfiltration"},
     "data_exfiltration": {"stage": "Exfiltration",       "stage_idx": 7, "next": "Impact"},
+<<<<<<< HEAD
+=======
+    "false_positive":    {"stage": "None (Reviewed)",    "stage_idx": 0, "next": "None"},
+>>>>>>> faa6da9db9a856407276fd50c63b58931fd78442
     "benign":            {"stage": "None",               "stage_idx": 0, "next": "None"}
 }
 
@@ -79,6 +91,14 @@ PLAYBOOKS = {
         ],
         "escalate_if": "Transfer volume exceeds 1GB or destination IP changes"
     },
+<<<<<<< HEAD
+=======
+    "false_positive": {
+        "immediate": ["No action required - flagged as safe noise"],
+        "short_term": ["Review the pattern to ensure whitelist is still valid"],
+        "escalate_if": "Source IP changes behavior to match other attack patterns"
+    },
+>>>>>>> faa6da9db9a856407276fd50c63b58931fd78442
     "benign": {
         "immediate": ["No action required"],
         "short_term": ["Log reviewed and closed"],
@@ -91,6 +111,10 @@ REASONS = {
     "lateral_movement":  "source IP contacted multiple internal hosts with no prior connection history",
     "c2_beacon":         "highly regular low-volume connections to external IP — consistent with beaconing",
     "data_exfiltration": "abnormally large outbound data transfer to external destination",
+<<<<<<< HEAD
+=======
+    "false_positive":    "behavior matches a known safe activity pattern (e.g. backup, scanner, stress test)",
+>>>>>>> faa6da9db9a856407276fd50c63b58931fd78442
     "benign":            "all signals within normal range"
 }
 
@@ -137,12 +161,24 @@ def predict(event: dict):
 
     top_shap = list(top_shap)
 
+<<<<<<< HEAD
     # False positive override
     is_fp = False
     if event.get("src_ip") in KNOWN_ADMIN_IPS and event.get("bytes_out", 0) > 1_000_000:
         label      = "benign"
         is_fp      = True
         confidence = round(confidence * 0.6, 3)
+=======
+    # False positive detection
+    # 1. Model predicted it directly
+    is_fp = (label == "false_positive")
+    
+    # 2. Heuristic override for safety (can be removed if model is perfect)
+    if not is_fp and event.get("src_ip") in KNOWN_ADMIN_IPS and event.get("bytes_out", 0) > 1_000_000:
+        label      = "false_positive"
+        is_fp      = True
+        confidence = round(confidence * 0.9, 3) # slightly lower confidence for override
+>>>>>>> faa6da9db9a856407276fd50c63b58931fd78442
 
     return {
         "threat_type":   label,

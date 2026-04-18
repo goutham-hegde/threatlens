@@ -4,18 +4,32 @@ __pycache__/
 *$py.class
 .env
 .venv
+<<<<<<< HEAD
 env/
 venv/
 PYTHONHASHSEED
 
 # --- Machine Learning Artifacts (The culprits from your error) ---
+=======
+.csv
+env/
+venv/
+PYTHONHASHSEED
+data/*.csv
+
+# --- Machine Learning Artifacts ---
+>>>>>>> faa6da9db9a856407276fd50c63b58931fd78442
 # Ignore all serialized models/data in the model folder
 model/*.pkl
 model/*.joblib
 model/*.h5
 model/*.pth
 
+<<<<<<< HEAD
 # --- Node.js / React (If applicable to your frontend) ---
+=======
+# --- Node.js / React ---
+>>>>>>> faa6da9db9a856407276fd50c63b58931fd78442
 node_modules/
 dist/
 build/
@@ -29,4 +43,9 @@ Thumbs.db
 
 # --- Logs & Databases ---
 *.log
+<<<<<<< HEAD
 *.sqlite
+=======
+*.sqlite
+data/*.csv
+>>>>>>> faa6da9db9a856407276fd50c63b58931fd78442
